@@ -1,6 +1,6 @@
 # AI Hedge Fund
 
-This is an extension project for an AI-powered hedge fund.  The goal of this project is to explore the use of AI to make trading decisions based off optimizing the orchestration via organizational rebuild and better workflow with self-improving module (WIP) 
+This is an extension project for an working AI-powered hedge fund team based off https://github.com/virattt/ai-hedge-fund.  The goal of this project is to explore the use of AI to make trading decisions based off optimizing the orchestration via organizational rebuild and better workflow with self-improving module (WIP) 
 
 This system employs several agents working together:
 
@@ -25,13 +25,12 @@ This system employs several agents working together:
 
 <img width="1042" alt="Screenshot 2025-03-22 at 6 19 07 PM" src="https://github.com/user-attachments/assets/cbae3dcf-b571-490d-b0ad-3f0f035ac0d4" />
 
-Note: the system does not actually make any trades.
+Note: the system does not actually make any trades now.
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/virattt?style=social)](https://twitter.com/virattt)
 
 ## Disclaimer
 
-This project is for **educational and research purposes only**.
+This project is currently for **educational and research purposes only**.
 
 - Not intended for real trading or investment
 - No investment advice or guarantees provided
@@ -102,7 +101,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 ```
 
-#### Run the AI Hedge Fund
+#### Run the AI Hedge Fund (CLI)
 ```bash
 poetry run python src/main.py --ticker AAPL,MSFT,NVDA
 ```
@@ -129,29 +128,6 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
 
 
 Note: The `--ollama`, `--start-date`, and `--end-date` flags work for the backtester, as well!
-
-### 🖥️ Web Application
-
-The new way to run the AI Hedge Fund is through our web application that provides a user-friendly interface. This is recommended for users who prefer visual interfaces over command line tools.
-
-Please see detailed instructions on how to install and run the web application [here](https://github.com/virattt/ai-hedge-fund/tree/main/app).
-
-<img width="1721" alt="Screenshot 2025-06-28 at 6 41 03 PM" src="https://github.com/user-attachments/assets/b95ab696-c9f4-416c-9ad1-51feb1f5374b" />
-
-
-## How to Contribute
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-**Important**: Please keep your pull requests small and focused.  This will make it easier to review and merge.
-
-## Feature Requests
-
-If you have a feature request, please open an [issue](https://github.com/virattt/ai-hedge-fund/issues) and make sure it is tagged with `enhancement`.
 
 ## License
 
