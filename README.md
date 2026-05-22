@@ -133,7 +133,7 @@ Example evidence object:
 }
 ```
 
-### 2. From Single PM to Style Sleeve PMs
+### 2. From Single PM to Style Sleeve PMs (or Investors)
 
 Rather than sending all analyst outputs into one portfolio manager, the redesigned workflow introduces multiple style-based proposal agents:
 
@@ -158,7 +158,7 @@ Checks whether the combined proposals fit the overall simulated portfolio risk e
 
 This makes risk management more visible, explainable, and auditable.
 
-### 4. Attribution Native
+### 4. Attribution Native ()
 
 The system should record what happened after each simulated proposal:
 
@@ -218,10 +218,10 @@ Planned build sequence:
 
 - [x] Product case study and redesign direction
 - [x] Evidence schema
-- [ ] Analyst output normalizer
-- [ ] Research Synthesizer
+- [x] Analyst output normalizer
+- [x] Research Synthesizer
 - [ ] Sleeve Proposal Panel
-- [ ] Sleeve-level Risk
+- [ ] Sleeve-level Risk (skip for now)
 - [ ] Firm-level Risk Cockpit
 - [ ] Capital Allocator
 - [ ] Execution Simulator
