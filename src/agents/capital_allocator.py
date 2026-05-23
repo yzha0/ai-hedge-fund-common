@@ -82,7 +82,10 @@ def capital_allocator_agent(state: AgentState, agent_id: str = "capital_allocato
             if approved_weight_pct <= 0.0 or strength <= 0.0:
                 continue
 
-            weighted_signed_weight = sign * approved_weight_pct * strength
+            weighted_signed_weight = sign * approved_weight_pct * strength  # This is the core of the allocator's decision: 
+                                                                            # manager proposals are weighted by their 
+                                                                            # conviction, style, and any risk adjustments, 
+                                                                            # and then aggregated into a candidate weight for the ticker
             entries.append(
                 {
                     "pm_id": pm_id,
@@ -105,9 +108,9 @@ def capital_allocator_agent(state: AgentState, agent_id: str = "capital_allocato
             }
             continue
 
-        candidate_weight_pct = sum(entry["weighted_signed_weight"] for entry in entries)
+        candidate_weight_pct = sum(entry["weighted_signed_weight"] for entry in entries) #aggregate the weighted signals into a candidate weight for the ticker
         max_abs_weight_pct = float(ticker_limits.get(ticker, {}).get("max_abs_weight_pct", 0.0))
-        candidate_weight_pct = max(-max_abs_weight_pct, min(max_abs_weight_pct, candidate_weight_pct))
+        candidate_weight_pct = max(-max_abs_weight_pct, min(max_abs_weight_pct, candidate_weight_pct))# enforce any ticker-level weight limits on the candidate weight
         candidate_notional = equity * candidate_weight_pct / 100.0
         raw_allocations[ticker] = {
             "candidate_weight_pct": candidate_weight_pct,
@@ -158,7 +161,7 @@ def capital_allocator_agent(state: AgentState, agent_id: str = "capital_allocato
         price = float(current_prices.get(ticker, 0.0))
         target_net_shares = 0
         if price > 0.0 and abs(new_notional) > 0.0:
-            target_net_shares = int(abs(new_notional) // price)
+            target_net_shares = float(abs(new_notional) // price)
             if new_notional < 0:
                 target_net_shares *= -1
 
@@ -174,7 +177,7 @@ def capital_allocator_agent(state: AgentState, agent_id: str = "capital_allocato
             "net_signal": "bullish" if new_notional > 0 else "bearish" if new_notional < 0 else "neutral",
             "allocated_notional": round(new_notional, 4),
             "allocated_weight_pct": round(candidate_weight_pct, 4),
-            "target_net_shares": int(target_net_shares),
+            "target_net_shares": float(target_net_shares),
             "winning_pm_ids": aligned_entries,
             "allocator_confidence": round(avg_conviction, 2),
             "reasoning": (

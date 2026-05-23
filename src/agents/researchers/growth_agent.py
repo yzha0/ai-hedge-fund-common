@@ -15,6 +15,7 @@ from src.agents.researchers.evidence import build_raw_evidence
 from src.tools.api import (
     get_financial_metrics,
     get_insider_trades,
+    search_line_items,
 )
 
 def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agent"):
@@ -43,6 +44,19 @@ def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agen
         
         most_recent_metrics = financial_metrics[0]
 
+        annual_line_items = search_line_items(
+            ticker=ticker,
+            line_items=[
+                "revenue",
+                "earnings_per_share",
+                "free_cash_flow",
+            ],
+            end_date=end_date,
+            period="annual",
+            limit=5,
+            api_key=api_key,
+        )
+
         # --- Insider Trades ---
         insider_trades = get_insider_trades(
             ticker=ticker,
@@ -57,6 +71,7 @@ def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agen
         
         # 1. Historical Growth Analysis
         growth_trends = analyze_growth_trends(financial_metrics)
+        multi_period_growth = analyze_multi_period_growth(annual_line_items)
         
         # 2. Growth-Oriented Valuation
         valuation_metrics = analyze_valuation(most_recent_metrics)
@@ -102,6 +117,7 @@ def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agen
 
         reasoning = {
             "historical_growth": growth_trends,
+            "multi_period_growth": multi_period_growth,
             "growth_valuation": valuation_metrics,
             "margin_expansion": margin_trends,
             "insider_conviction": insider_conviction,
@@ -119,12 +135,15 @@ def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agen
             metrics={
                 "weighted_score": weighted_score,
                 "component_scores": scores,
+                "multi_period_growth": multi_period_growth["metrics"],
             },
             components=reasoning,
             weights=weights,
             metadata={
                 "financial_metric_period": "ttm",
                 "financial_metric_limit": 12,
+                "line_item_period": "annual",
+                "line_item_limit": 5,
                 "insider_trade_limit": 1000,
             },
         )
@@ -171,6 +190,65 @@ def _calculate_trend(data: list[float | None]) -> float:
         return slope
     except ZeroDivisionError:
         return 0.0
+
+
+def _calculate_cagr(values: list[float | None]) -> float | None:
+    """Calculate CAGR from newest-to-oldest values."""
+    clean_values = [value for value in values if value is not None]
+    if len(clean_values) < 2:
+        return None
+
+    latest = clean_values[0]
+    oldest = clean_values[-1]
+    years = len(clean_values) - 1
+    if latest <= 0 or oldest <= 0 or years <= 0:
+        return None
+
+    return (latest / oldest) ** (1 / years) - 1
+
+
+def analyze_multi_period_growth(line_items: list) -> dict:
+    """Expose Stanley-style annualized growth evidence for PMs."""
+    if not line_items or len(line_items) < 2:
+        return {
+            "signal": "neutral",
+            "score": 0.5,
+            "metrics": {
+                "revenue_cagr": None,
+                "eps_cagr": None,
+                "free_cash_flow_cagr": None,
+                "periods": len(line_items or []),
+            },
+        }
+
+    revenue_cagr = _calculate_cagr([getattr(item, "revenue", None) for item in line_items])
+    eps_cagr = _calculate_cagr([getattr(item, "earnings_per_share", None) for item in line_items])
+    fcf_cagr = _calculate_cagr([getattr(item, "free_cash_flow", None) for item in line_items])
+
+    cagr_values = [value for value in [revenue_cagr, eps_cagr, fcf_cagr] if value is not None]
+    avg_cagr = sum(cagr_values) / len(cagr_values) if cagr_values else 0.0
+
+    if avg_cagr >= 0.08:
+        signal = "bullish"
+        score = 1.0
+    elif avg_cagr <= 0.0:
+        signal = "bearish"
+        score = 0.0
+    else:
+        signal = "neutral"
+        score = 0.5
+
+    return {
+        "signal": signal,
+        "score": score,
+        "metrics": {
+            "revenue_cagr": revenue_cagr,
+            "eps_cagr": eps_cagr,
+            "free_cash_flow_cagr": fcf_cagr,
+            "average_cagr": avg_cagr,
+            "periods": len(line_items),
+        },
+    }
 
 def analyze_growth_trends(metrics: list) -> dict:
     """Analyzes historical growth trends."""

@@ -145,7 +145,6 @@ def research_synthesizer_agent(state: AgentState, agent_id: str = "research_synt
             }
 
         summary = {
-            "factor_panel": factor_panel,
             "composite_signal": _score_to_signal(composite_score),
             "composite_score": round(composite_score, 4),
             "composite_confidence": round(composite_confidence, 2),
@@ -154,6 +153,7 @@ def research_synthesizer_agent(state: AgentState, agent_id: str = "research_synt
             "bearish_agents": sorted(set(bearish_agents)),
             "neutral_agents": sorted(set(neutral_agents)),
             "style_views": style_views,
+            "factor_panel": factor_panel,
            # "raw_evidence": raw_evidence_panel,
         }
         research_summary[ticker] = summary

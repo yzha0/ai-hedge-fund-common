@@ -32,6 +32,16 @@ class ManagerProposalOutput(BaseModel):
     proposals: dict[str, ManagerTickerProposal]
 
 
+def _manager_directives(manager_key: str) -> str:
+    if manager_key == "stanley_druckenmiller":
+        return (
+            "Emphasize momentum, news/sentiment, growth evidence, asymmetric payoff, "
+            "and shorter holding periods. Be decisive only when evidence aligns; "
+            "otherwise stay neutral."
+        )
+    return "Use the persona style description and synthesized evidence only."
+
+
 def manager_proposal_agent(state: AgentState, agent_id: str):
     """Investor-style PM node that reads synthesized research and proposes exposures."""
     data = state["data"]
@@ -44,6 +54,7 @@ def manager_proposal_agent(state: AgentState, agent_id: str):
     style = MANAGER_STYLE_BY_KEY[manager_key]
     default_horizon = STYLE_DEFAULT_HORIZONS[style]
     pm_weight = float(attribution_state.setdefault("pm_weights", {}).get(manager_key, 1.0))
+    manager_directives = _manager_directives(manager_key)
 
     progress.update_status(agent_id, None, "Generating manager proposals")
 
@@ -55,13 +66,14 @@ def manager_proposal_agent(state: AgentState, agent_id: str):
                 "You receive synthesized research, not raw data.\n"
                 "Propose one stance per ticker. desired_weight_pct must be between 0 and 12.\n"
                 "If evidence is weak or mixed, choose neutral and 0 weight.\n"
-                "Keep thesis concise (max 120 chars). Return JSON only.",
+                "Keep thesis concise (max 300 chars). Return JSON only.",
             ),
             (
                 "human",
                 "Manager: {manager_name}\n"
                 "Style: {style}\n"
                 "Style description: {style_description}\n"
+                "Manager directives: {manager_directives}\n"
                 "Default horizon days: {default_horizon}\n"
                 "Current PM weight: {pm_weight}\n\n"
                 "Research packets:\n{research_packets}\n\n"
@@ -80,6 +92,7 @@ def manager_proposal_agent(state: AgentState, agent_id: str):
             "manager_name": manager_config["display_name"],
             "style": style,
             "style_description": manager_config["investing_style"],
+            "manager_directives": manager_directives,
             "default_horizon": default_horizon,
             "pm_weight": f"{pm_weight:.2f}",
             "research_packets": json.dumps(

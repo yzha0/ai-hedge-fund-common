@@ -36,6 +36,7 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
         # Get the signals from the insider trades
         transaction_shares = pd.Series([t.transaction_shares for t in insider_trades]).dropna()
         insider_signals = np.where(transaction_shares < 0, "bearish", "bullish").tolist()
+        insider_metrics = analyze_insider_trade_metrics(insider_trades)
 
         progress.update_status(agent_id, ticker, "Fetching company news")
 
@@ -84,6 +85,7 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
                     "total_trades": len(insider_signals),
                     "bullish_trades": insider_signals.count("bullish"),
                     "bearish_trades": insider_signals.count("bearish"),
+                    **insider_metrics,
                     "weight": insider_weight,
                     "weighted_bullish": round(insider_signals.count("bullish") * insider_weight, 1),
                     "weighted_bearish": round(insider_signals.count("bearish") * insider_weight, 1),
@@ -118,6 +120,7 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
                 "total_weighted_signals": total_weighted_signals,
                 "insider_signal_count": len(insider_signals),
                 "news_signal_count": len(news_signals),
+                "insider_metrics": insider_metrics,
             },
             components={
                 **reasoning,
@@ -152,4 +155,35 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
     return {
         "messages": [message],
         "data": data,
+    }
+
+
+def analyze_insider_trade_metrics(insider_trades: list) -> dict:
+    """Summarize insider participation without turning it into a PM decision."""
+    buy_count = 0
+    sell_count = 0
+    buy_value = 0.0
+    sell_value = 0.0
+
+    for trade in insider_trades or []:
+        shares = getattr(trade, "transaction_shares", None)
+        value = getattr(trade, "transaction_value", None) or 0.0
+        if shares is None:
+            continue
+        if shares > 0:
+            buy_count += 1
+            buy_value += abs(float(value))
+        elif shares < 0:
+            sell_count += 1
+            sell_value += abs(float(value))
+
+    total_count = buy_count + sell_count
+    total_value = buy_value + sell_value
+    return {
+        "buy_count": buy_count,
+        "sell_count": sell_count,
+        "buy_ratio": buy_count / total_count if total_count else 0.0,
+        "net_flow_ratio": (buy_value - sell_value) / total_value if total_value else 0.0,
+        "buy_value": buy_value,
+        "sell_value": sell_value,
     }

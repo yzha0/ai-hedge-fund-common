@@ -374,22 +374,8 @@ flowchart TD
 
 #### 原则 1：Evidence First
 
-Agent 不直接产出最终交易动作，而是先产出结构化证据。
+Agent 不直接产出最终交易动作，而是先产出结构化证据 see 7.2 json example.
 
-```json
-{
-  "evidence_id": "EV-NVDA-20260519-001",
-  "ticker": "NVDA",
-  "signal": "bullish",
-  "confidence": 0.82,
-  "horizon": "medium",
-  "evidence_type": "fundamental",
-  "summary": "Revenue growth remains strong while margin expansion continues.",
-  "risk_flags": ["high_valuation", "crowded_trade"],
-  "source": ["fundamentals", "news", "market_data"],
-  "timestamp": "2026-05-19T09:30:00-07:00"
-}
-```
 
 #### 原则 2：From Single PM to Sleeve PMs
 
@@ -433,7 +419,7 @@ Research Support / Simulation Only / Human Review Required
 
 ---
 
-## 06. 信息架构与核心页面
+## 06. 信息架构与核心页面v1
 
 ### 6.1 产品信息架构
 
@@ -474,7 +460,7 @@ flowchart TD
 
 ---
 
-### 6.2 核心页面 1：Research Workspace
+### 6.2 核心页面 1：Research Workspace 
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -574,69 +560,257 @@ flowchart TD
 
 ---
 
-### 7.2 核心数据结构
+### 7.2 核心数据结构实例
 
-#### Evidence Item
+#### Evidence Synthesizer Example
 
 ```json
 {
-  "evidence_id": "EV-NVDA-001",
-  "task_id": "TASK-20260519-001",
-  "ticker": "NVDA",
-  "agent_name": "fundamentals_analyst",
-  "evidence_type": "fundamental",
-  "signal": "bullish",
-  "confidence": 0.82,
-  "horizon": "medium",
-  "summary": "Revenue growth remains strong while margin expansion continues.",
-  "supporting_data": {
-    "metric": "revenue_growth",
-    "value": "high",
-    "period": "latest_quarter"
+  "ticker":"",     
+  "Composite Summary":{
+        "Composite metrics":"",
+        "Composite":"",
+        "Style view":{},
+        
+
+
   },
-  "risk_flags": ["high_valuation", "crowded_trade"],
-  "source_refs": ["fundamentals", "news", "market_data"],
-  "created_at": "2026-05-19T09:30:00-07:00"
+  "factor panel":{
+        "growth analyst":{
+        ...
+        ...
+        },
+        "technical analyst":{
+        ...
+        ...
+        
+        },
+        "fundamental analyst":{
+        ...
+        ...
+        },
+        "Valuation analyst":{
+        ...
+        ...
+        },
+        "Sentiment analyst":{
+        ...
+        ...
+        },
+        "News Sentiment analyst":{
+        ...
+        ...
+        }
+  }
 }
 ```
 
-#### Sleeve Proposal
+#### Stylish Manager Proposal
 
 ```json
 {
-  "proposal_id": "PROP-NVDA-GROWTH-001",
-  "task_id": "TASK-20260519-001",
-  "ticker": "NVDA",
-  "sleeve": "growth",
-  "action": "add",
-  "target_exposure": 0.04,
-  "confidence": 0.81,
-  "expected_horizon": "3-6 months",
-  "thesis": "Growth durability remains strong despite valuation risk.",
-  "supporting_evidence_ids": ["EV-NVDA-001", "EV-NVDA-004"],
-  "key_risks": ["high_valuation", "crowded_trade"],
-  "created_at": "2026-05-19T09:45:00-07:00"
+  "AVGO": {
+    "style": "value",
+    "signal": "bearish",
+    "conviction": 75,
+    "desired_weight_pct": 0.0,
+    "holding_period_days": 90,
+    "thesis": "Stock trades at >80% discount to intrinsic value; P/E 62.9, D/E 1.13, current ratio 1.9 violate Graham's margin of safety and financial strength thresholds.",
+    "risk_notes": [
+      "High debt-to-equity of 1.13 exceeds Graham's preference for low leverage.",
+      "Current ratio of 1.9 slightly below Graham's 2.0 threshold.",
+      "Extreme overvaluation leaves no margin of safety."
+    ]
 }
 ```
 
-#### Risk Decision
+#### Central Risk Decision
 
 ```json
 {
-  "risk_decision_id": "RISK-PROP-NVDA-GROWTH-001",
-  "proposal_id": "PROP-NVDA-GROWTH-001",
-  "risk_layer": "firm",
-  "decision": "scale",
-  "original_exposure": 0.04,
-  "approved_exposure": 0.025,
-  "reason_codes": ["tech_sector_cap_near_limit", "crowding_risk_amber"],
-  "metrics": {
-    "gross_exposure": 0.78,
-    "net_exposure": 0.42,
-    "sector_tech_exposure": 0.28,
-    "liquidity_score": 0.74
+  {
+  "portfolio_limits": {
+    "equity": 100000.0,
+    "gross_exposure_before": 0.0,
+    "net_exposure_before": 0.0,
+    "max_gross_exposure": 150000.0,
+    "max_net_exposure": 60000.0,
+    "min_cash_buffer": 10000.0
   },
-  "created_at": "2026-05-19T09:55:00-07:00"
+  "ticker_limits": {
+    "AVGO": {
+      "current_price": 417.76,
+      "annualized_volatility": 0.4258448032508022,
+      "volatility_percentile": 58.69565217391305,
+      "avg_correlation_with_active": 0.312718333920276,
+      "max_abs_notional": 14428.62956586658,
+      "max_abs_weight_pct": 14.42862956586658,
+      "current_net_notional": 0.0
+    },
+    "PLTR": {
+      "current_price": 137.15,
+      "annualized_volatility": 0.5030731660246816,
+      "volatility_percentile": 34.78260869565217,
+      "avg_correlation_with_active": 0.312718333920276,
+      "max_abs_notional": 10500.000000000002,
+      "max_abs_weight_pct": 10.500000000000002,
+      "current_net_notional": 0.0
+    }
+  },
+  "proposal_review": {
+    "pm_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    },
+    "ben_graham_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    },
+    "michael_burry_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    },
+    "phil_fisher_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    },
+    "charlie_munger_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    },
+    "bill_ackman_agent": {
+      "AVGO": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.5917,
+        "max_weight_pct": 14.4286,
+        "reasons": [
+          "High disagreement across research analysts",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      },
+      "PLTR": {
+        "status": "block",
+        "desired_weight_pct": 0.0,
+        "approved_weight_pct": 0.0,
+        "risk_adjustment": 0.6273,
+        "max_weight_pct": 10.5,
+        "reasons": [
+          "High disagreement across research analysts",
+          "High realized volatility",
+          "No active risk budget for neutral or zero-conviction proposal"
+        ]
+      }
+    }
+  }
+}
+
 }
 ```
 
@@ -644,25 +818,44 @@ flowchart TD
 
 ```json
 {
-  "allocation_id": "ALLOC-20260519-001",
-  "task_id": "TASK-20260519-001",
-  "sleeve_scores": {
-    "value": 0.58,
-    "growth": 0.81,
-    "macro": 0.62,
-    "contrarian": 0.70
+  "pm_budgets": {
+    "phil_fisher_agent": 0.4188
   },
-  "budget_recommendation": {
-    "value": 0.12,
-    "growth": 0.18,
-    "macro": 0.10,
-    "contrarian": 0.08
+  "ticker_allocations": {
+    "MU": {
+      "net_signal": "bullish",
+      "allocated_notional": 418.7673,
+      "allocated_weight_pct": 0.4188,
+      "target_net_shares": 0,
+      "winning_pm_ids": [
+        "phil_fisher_agent"
+      ],
+      "allocator_confidence": 65.0,
+      "reasoning": "Allocator netted manager proposals and clipped to firm constraints"
+    }
   },
-  "haircuts": {
-    "growth": "scaled due to sector concentration"
-  },
-  "created_at": "2026-05-19T10:00:00-07:00"
+  "cash_reserve": 100000.0
 }
+
+```
+##### Commons Manager
+```json
+{
+  "AVGO": {
+    "action": "hold",
+    "quantity": 0,
+    "confidence": 0,
+    "reasoning": "No trade needed after allocation review"
+  },
+  "PLTR": {
+    "action": "hold",
+    "quantity": 0,
+    "confidence": 0,
+    "reasoning": "No trade needed after allocation review"
+  }
+}
+
+
 ```
 
 ---

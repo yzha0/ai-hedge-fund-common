@@ -256,6 +256,13 @@ def calculate_momentum_signals(prices_df):
     """
     # Price momentum
     returns = prices_df["close"].pct_change()
+    start_price = prices_df["close"].iloc[0] if len(prices_df) > 0 else None
+    end_price = prices_df["close"].iloc[-1] if len(prices_df) > 0 else None
+    period_return = (
+        (end_price - start_price) / start_price
+        if start_price is not None and start_price > 0 and end_price is not None
+        else None
+    )
     mom_1m = returns.rolling(21).sum()
     mom_3m = returns.rolling(63).sum()
     mom_6m = returns.rolling(126).sum()
@@ -290,6 +297,7 @@ def calculate_momentum_signals(prices_df):
             "momentum_1m": safe_float(mom_1m.iloc[-1]),
             "momentum_3m": safe_float(mom_3m.iloc[-1]),
             "momentum_6m": safe_float(mom_6m.iloc[-1]),
+            "period_return": safe_float(period_return) if period_return is not None else None,
             "volume_momentum": safe_float(volume_momentum.iloc[-1]),
         },
     }

@@ -141,6 +141,11 @@ def valuation_analyst_agent(state: AgentState, agent_id: str = "valuation_analys
         if not market_cap:
             progress.update_status(agent_id, ticker, "Failed: Market cap unavailable")
             continue
+        simple_multiples = calculate_simple_multiples(
+            metrics=most_recent_metrics,
+            line_item=li_curr,
+            market_cap=market_cap,
+        )
 
         method_values = {
             "dcf": {"value": dcf_val, "weight": 0.35},
@@ -200,6 +205,11 @@ def valuation_analyst_agent(state: AgentState, agent_id: str = "valuation_analys
                 "wacc_used": f"{wacc:.1%}",
                 "fcf_periods_analyzed": len(fcf_history)
             }
+        reasoning["simple_multiples"] = {
+            "signal": "context",
+            "metrics": simple_multiples,
+            "details": "Manager-readable valuation multiples for PM proposal context",
+        }
         raw_evidence = build_raw_evidence(
             factor="valuation",
             signal=signal,
@@ -217,10 +227,12 @@ def valuation_analyst_agent(state: AgentState, agent_id: str = "valuation_analys
                 "interest_coverage": most_recent_metrics.interest_coverage,
                 "price_to_book_ratio": most_recent_metrics.price_to_book_ratio,
                 "book_value_growth": most_recent_metrics.book_value_growth,
+                "simple_multiples": simple_multiples,
             },
             components={
                 "valuation_methods": method_values,
                 "dcf_scenarios": dcf_results if 'dcf_results' in locals() else {},
+                "simple_multiples": simple_multiples,
                 "reasoning": reasoning,
             },
             weights={method: values["weight"] for method, values in method_values.items()},
@@ -252,6 +264,40 @@ def valuation_analyst_agent(state: AgentState, agent_id: str = "valuation_analys
 #############################
 # Helper Valuation Functions
 #############################
+
+
+def _safe_ratio(numerator: float | None, denominator: float | None) -> float | None:
+    if numerator is None or denominator is None or denominator <= 0:
+        return None
+    return numerator / denominator
+
+
+def calculate_simple_multiples(metrics, line_item, market_cap: float | None) -> dict:
+    """Expose common valuation multiples in one manager-readable packet."""
+    net_income = getattr(line_item, "net_income", None)
+    free_cash_flow = getattr(line_item, "free_cash_flow", None)
+    ebit = getattr(line_item, "ebit", None)
+    ebitda = getattr(line_item, "ebitda", None)
+    total_debt = getattr(line_item, "total_debt", None) or 0
+    cash = getattr(line_item, "cash_and_equivalents", None) or 0
+    enterprise_value = (
+        getattr(metrics, "enterprise_value", None)
+        or ((market_cap + total_debt - cash) if market_cap is not None else None)
+    )
+
+    return {
+        "price_to_earnings_ratio": (
+            getattr(metrics, "price_to_earnings_ratio", None)
+            or _safe_ratio(market_cap, net_income)
+        ),
+        "price_to_free_cash_flow": _safe_ratio(market_cap, free_cash_flow),
+        "enterprise_value_to_ebit": _safe_ratio(enterprise_value, ebit),
+        "enterprise_value_to_ebitda": (
+            getattr(metrics, "enterprise_value_to_ebitda_ratio", None)
+            or _safe_ratio(enterprise_value, ebitda)
+        ),
+    }
+
 
 def calculate_owner_earnings_value(
     net_income: float | None,

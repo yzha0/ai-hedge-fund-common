@@ -17,6 +17,76 @@ from src.utils.architecture import create_default_attribution_state
 from src.utils.progress import progress
 
 
+def _raw_evidence_for_factor(research_summary: dict, ticker: str, factor: str) -> list[dict]:
+    factor_payload = (
+        research_summary.get(ticker, {})
+        .get("factor_panel", {})
+        .get(factor, {})
+    )
+    raw_evidence = factor_payload.get("raw_evidence", [])
+    return [
+        entry.get("evidence", entry)
+        for entry in raw_evidence
+        if isinstance(entry, dict)
+    ]
+
+
+def _extract_evidence_risk_flags(research_summary: dict, ticker: str) -> dict:
+    reasons: list[str] = []
+    flags: dict[str, float] = {}
+    risk_adjustment = 1.0
+
+    for evidence in _raw_evidence_for_factor(research_summary, ticker, "fundamentals"):
+        components = evidence.get("components", {})
+        health_metrics = (
+            components.get("financial_health_signal", {})
+            .get("metrics", {})
+        )
+        debt_to_equity = health_metrics.get("debt_to_equity")
+        current_ratio = health_metrics.get("current_ratio")
+
+        if debt_to_equity is not None:
+            flags["debt_to_equity"] = float(debt_to_equity)
+            if debt_to_equity >= 2.0:
+                reasons.append("Very high leverage in research evidence")
+                risk_adjustment *= 0.70
+            elif debt_to_equity >= 1.5:
+                reasons.append("High leverage in research evidence")
+                risk_adjustment *= 0.80
+
+        if current_ratio is not None:
+            flags["current_ratio"] = float(current_ratio)
+            if current_ratio < 1.0:
+                reasons.append("Weak liquidity in research evidence")
+                risk_adjustment *= 0.85
+
+    for evidence in _raw_evidence_for_factor(research_summary, ticker, "valuation"):
+        metrics = evidence.get("metrics", {})
+        weighted_gap = metrics.get("weighted_gap")
+        market_cap = metrics.get("market_cap")
+        dcf_scenarios = evidence.get("components", {}).get("dcf_scenarios", {})
+        downside = dcf_scenarios.get("downside")
+
+        if weighted_gap is not None:
+            flags["valuation_weighted_gap"] = float(weighted_gap)
+            if weighted_gap <= -0.25:
+                reasons.append("Poor valuation support in research evidence")
+                risk_adjustment *= 0.85
+
+        if market_cap and downside is not None:
+            downside_gap = (downside - market_cap) / market_cap
+            flags["valuation_downside_gap"] = float(downside_gap)
+            if downside_gap <= -0.35:
+                reasons.append("Weak valuation downside case in research evidence")
+                risk_adjustment *= 0.85
+
+    return {
+        "risk_adjustment": max(0.35, risk_adjustment),
+        "reasons": reasons,
+        "flags": flags,
+    }
+
+
 def central_risk_agent(state: AgentState, agent_id: str = "central_risk_agent"):
     """Firm-level risk review for manager proposals."""
     data = state["data"]
@@ -163,6 +233,10 @@ def central_risk_agent(state: AgentState, agent_id: str = "central_risk_agent"):
                 reasons.append("High realized volatility")
             risk_adjustment *= max(0.5, min(1.0, 0.6 / max(annualized_vol, 0.6)))
 
+            evidence_risk = _extract_evidence_risk_flags(research_summary, ticker)
+            reasons.extend(evidence_risk["reasons"])
+            risk_adjustment *= evidence_risk["risk_adjustment"]
+
             max_weight_pct = float(ticker_limit.get("max_abs_weight_pct", 0.0))
             approved_weight_pct = min(desired_weight_pct * risk_adjustment, max_weight_pct)
 
@@ -176,8 +250,10 @@ def central_risk_agent(state: AgentState, agent_id: str = "central_risk_agent"):
                 reasons.append("Proposal too small after risk adjustments")
             elif approved_weight_pct + 1e-9 < desired_weight_pct:
                 status = "haircut"
+                reasons.append("Proposal exceeds risk limits, approved at reduced weight")
             else:
                 status = "pass"
+                reasons.append("Proposal approved within risk limits")
 
             pm_reviews[ticker] = {
                 "status": status,
@@ -186,6 +262,7 @@ def central_risk_agent(state: AgentState, agent_id: str = "central_risk_agent"):
                 "risk_adjustment": round(risk_adjustment, 4),
                 "max_weight_pct": round(max_weight_pct, 4),
                 "reasons": reasons,
+                "evidence_risk_flags": evidence_risk["flags"],
             }
         proposal_review[pm_id] = pm_reviews
 

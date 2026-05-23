@@ -76,6 +76,7 @@ def analyze_news_sentiment_data(
     bullish_signals = news_signals.count("bullish")
     bearish_signals = news_signals.count("bearish")
     neutral_signals = news_signals.count("neutral")
+    headline_risk_flags = analyze_headline_risk_flags(company_news)
 
     if bullish_signals > bearish_signals:
         overall_signal = "bullish"
@@ -105,13 +106,17 @@ def analyze_news_sentiment_data(
                 "neutral_articles": neutral_signals,
                 "articles_classified_by_llm": sentiments_classified_by_llm,
             },
-        }
+        },
+        "headline_risk_flags": headline_risk_flags,
     }
     raw_evidence = build_raw_evidence(
         factor="news_sentiment",
         signal=overall_signal,
         confidence=confidence,
-        metrics=reasoning["news_sentiment"]["metrics"],
+        metrics={
+            **reasoning["news_sentiment"]["metrics"],
+            "headline_risk_flags": headline_risk_flags["metrics"],
+        },
         components=reasoning,
         metadata={
             "sampled_recent_articles": min(len(company_news or []), 10),
@@ -184,6 +189,44 @@ def news_sentiment_agent(state: AgentState, agent_id: str = "news_sentiment_anal
     return {
         "messages": [message],
         "data": state["data"],
+    }
+
+
+def analyze_headline_risk_flags(company_news: list[CompanyNews] | None) -> dict:
+    """Deterministic headline-risk scan to complement LLM sentiment."""
+    negative_keywords = [
+        "lawsuit",
+        "fraud",
+        "negative",
+        "downturn",
+        "decline",
+        "investigation",
+        "recall",
+    ]
+    flagged_headlines = []
+    matched_keywords: set[str] = set()
+
+    for news in company_news or []:
+        title = news.title or ""
+        title_lower = title.lower()
+        matches = [keyword for keyword in negative_keywords if keyword in title_lower]
+        if matches:
+            matched_keywords.update(matches)
+            flagged_headlines.append({"title": title, "matched_keywords": matches})
+
+    total_articles = len(company_news or [])
+    flagged_count = len(flagged_headlines)
+    negative_headline_ratio = flagged_count / total_articles if total_articles else 0.0
+
+    return {
+        "signal": "bearish" if negative_headline_ratio > 0.30 else "neutral",
+        "metrics": {
+            "flagged_headline_count": flagged_count,
+            "total_articles": total_articles,
+            "negative_headline_ratio": negative_headline_ratio,
+            "matched_keywords": sorted(matched_keywords),
+            "flagged_headlines": flagged_headlines[:5],
+        },
     }
 
 

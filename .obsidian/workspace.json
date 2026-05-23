@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AI智能投研系统模拟工作台_Case_Study_v1.md",
+                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "AI智能投研系统模拟工作台_Case_Study_v1"
+              "title": "AI智能投研系统_PRD_产品设计文档_v1"
             }
           },
           {
@@ -215,6 +215,10 @@
   },
   "active": "c6acb0a9ffecf2b7",
   "lastOpenFiles": [
+    "tests/backtesting/__pycache__/conftest.cpython-311-pytest-7.4.0.pyc",
+    "tests/__pycache__/test_stanley_evidence_routing.cpython-311-pytest-7.4.0.pyc",
+    "tests/test_stanley_evidence_routing.py",
+    "AI智能投研系统模拟工作台_Case_Study.md",
     "tests/__pycache__/test_research_synthesizer.cpython-311-pytest-7.4.0.pyc",
     "tests/__pycache__/test_research_synthesizer.cpython-311.pyc",
     "tests/test_research_synthesizer.py",
@@ -223,9 +227,6 @@
     "src/utils/__pycache__/investor_policies.cpython-311.pyc",
     "src/utils/investor_policies.py",
     "src/agents/researchers/evidence.py",
-    "tests/backtesting/integration/__pycache__/test_integration_short_only.cpython-311-pytest-7.4.4.pyc",
-    "tests/backtesting/integration/__pycache__/test_integration_long_short.cpython-311-pytest-7.4.4.pyc",
-    "tests/backtesting/integration/__pycache__/mocks.cpython-311.pyc",
     "README_1.md",
     "AI智能投研系统模拟工作台_Case_Study_v1.md",
     "AI智能投研系统_PRD_产品设计文档_v1.md",
