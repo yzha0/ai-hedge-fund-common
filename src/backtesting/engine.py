@@ -22,6 +22,7 @@ from src.tools.api import (
     get_financial_metrics,
     get_insider_trades,
 )
+from src.utils.architecture import FLAT_CURRENT_ARCHITECTURE
 
 
 class BacktestEngine:
@@ -44,7 +45,8 @@ class BacktestEngine:
         model_provider: str,
         selected_analysts: list[str] | None,
         initial_margin_requirement: float,
-        look_back_period_months: int
+        look_back_period_months: int,
+        architecture_mode: str = FLAT_CURRENT_ARCHITECTURE,
     ) -> None:
         self._agent = agent
         self._tickers = tickers
@@ -54,6 +56,7 @@ class BacktestEngine:
         self._model_name = model_name
         self._model_provider = model_provider
         self._selected_analysts = selected_analysts
+        self._architecture_mode = architecture_mode
         self._look_back_period_months = look_back_period_months
 
         self._portfolio = Portfolio(
@@ -140,6 +143,7 @@ class BacktestEngine:
                 model_name=self._model_name,
                 model_provider=self._model_provider,
                 selected_analysts=self._selected_analysts,
+                architecture_mode=self._architecture_mode,
             )
             decisions = agent_output["decisions"]
 
@@ -192,5 +196,3 @@ class BacktestEngine:
 
     def get_portfolio_values(self) -> Sequence[PortfolioValuePoint]:
         return list(self._portfolio_values)
-
-

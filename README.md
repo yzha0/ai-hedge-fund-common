@@ -214,18 +214,19 @@ A memo builder that exports the research workflow into Markdown or PDF, includin
 
 This repository is **currently under construction**.
 
-Planned build sequence:
+New Arch Planned build sequence:
 
 - [x] Product case study and redesign direction
 - [x] Evidence schema
 - [x] Analyst output normalizer
 - [x] Research Synthesizer
-- [ ] Sleeve Proposal Panel
+- [x] Sleeve Proposal Panel
 - [ ] Sleeve-level Risk (skip for now)
-- [ ] Firm-level Risk Cockpit
+- [x] Firm-level Risk Cockpit
 - [ ] Capital Allocator
 - [ ] Execution Simulator
-- [ ] Attribution Dashboard
+- [ ] Backtesting Update
+- [ ] Attribution Loop & Dashboard
 - [ ] Report Builder
 - [ ] Updated CLI / setup documentation
 
@@ -235,9 +236,9 @@ Planned build sequence:
 
 ### This project is
 
-- a research and simulation project,
-- a multi-agent investment workflow experiment,
-- a product redesign of an AI hedge fund demo,
+- an opc project,
+- a multi-agent equity research workflow prototype,
+- a redesign of an AI hedge fund demo,
 - a paper portfolio governance prototype,
 - a tool for exploring explainable AI-assisted research workflows.
 

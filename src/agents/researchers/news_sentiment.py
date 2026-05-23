@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.graph.state import AgentState, show_agent_reasoning
+from src.graph.state import AgentState
+from src.agents.researchers.evidence import build_raw_evidence
 from src.tools.api import get_company_news
 from src.utils.api_key import get_api_key_from_state
 from src.utils.llm import call_llm
@@ -106,16 +107,27 @@ def analyze_news_sentiment_data(
             },
         }
     }
+    raw_evidence = build_raw_evidence(
+        factor="news_sentiment",
+        signal=overall_signal,
+        confidence=confidence,
+        metrics=reasoning["news_sentiment"]["metrics"],
+        components=reasoning,
+        metadata={
+            "sampled_recent_articles": min(len(company_news or []), 10),
+        },
+    )
 
     return {
         "signal": overall_signal,
         "confidence": confidence,
         "reasoning": reasoning,
         "news_signals": news_signals,
+        "raw_evidence": raw_evidence,
     }
 
 
-def news_sentiment_agent(state: AgentState, agent_id: str = "news_sentiment_agent"):
+def news_sentiment_agent(state: AgentState, agent_id: str = "news_sentiment_analyst_agent"):
     """
     Analyzes news sentiment for a list of tickers and generates trading signals.
 
@@ -153,6 +165,7 @@ def news_sentiment_agent(state: AgentState, agent_id: str = "news_sentiment_agen
             "overall_signal": news_result["signal"],
             "confidence": news_result["confidence"],
             "reasoning": news_result["reasoning"],
+            "raw_evidence": news_result["raw_evidence"],
         }
 
         progress.update_status(agent_id, ticker, "Done", analysis=json.dumps(news_result["reasoning"], indent=4))
@@ -161,9 +174,6 @@ def news_sentiment_agent(state: AgentState, agent_id: str = "news_sentiment_agen
         content=json.dumps(sentiment_analysis),
         name=agent_id,
     )
-
-    if state.get("metadata", {}).get("show_reasoning"):
-        show_agent_reasoning(sentiment_analysis, "News Sentiment Analysis Agent")
 
     if "analyst_signals" not in state["data"]:
         state["data"]["analyst_signals"] = {}

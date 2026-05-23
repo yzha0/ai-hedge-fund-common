@@ -36,7 +36,8 @@ async def run(request_data: HedgeFundRequest, request: Request, db: Session = De
         # Construct agent graph using the React Flow graph structure
         graph = create_graph(
             graph_nodes=request_data.graph_nodes,
-            graph_edges=request_data.graph_edges
+            graph_edges=request_data.graph_edges,
+            architecture_mode=request_data.architecture_mode,
         )
         graph = graph.compile()
 
@@ -86,6 +87,7 @@ async def run(request_data: HedgeFundRequest, request: Request, db: Session = De
                         model_name=request_data.model_name,
                         model_provider=model_provider,
                         request=request_data,  # Pass the full request for agent-specific model access
+                        architecture_mode=request_data.architecture_mode,
                     )
                 )
                 
@@ -132,6 +134,7 @@ async def run(request_data: HedgeFundRequest, request: Request, db: Session = De
                         "decisions": parse_hedge_fund_response(result.get("messages", [])[-1].content),
                         "analyst_signals": result.get("data", {}).get("analyst_signals", {}),
                         "current_prices": result.get("data", {}).get("current_prices", {}),
+                        "architecture_mode": request_data.architecture_mode,
                     }
                 )
                 yield final_data.to_sse()
@@ -189,7 +192,11 @@ async def backtest(request_data: BacktestRequest, request: Request, db: Session 
         )
 
         # Construct agent graph using the React Flow graph structure (same as /run endpoint)
-        graph = create_graph(graph_nodes=request_data.graph_nodes, graph_edges=request_data.graph_edges)
+        graph = create_graph(
+            graph_nodes=request_data.graph_nodes,
+            graph_edges=request_data.graph_edges,
+            architecture_mode=request_data.architecture_mode,
+        )
         graph = graph.compile()
 
         # Create backtest service with the compiled graph
@@ -349,4 +356,3 @@ async def get_agents():
         return {"agents": get_agents_list()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve agents: {str(e)}")
-

@@ -8,9 +8,10 @@ Implements a growth-focused valuation methodology.
 import json
 import statistics
 from langchain_core.messages import HumanMessage
-from src.graph.state import AgentState, show_agent_reasoning
+from src.graph.state import AgentState
 from src.utils.progress import progress
 from src.utils.api_key import get_api_key_from_state
+from src.agents.researchers.evidence import build_raw_evidence
 from src.tools.api import (
     get_financial_metrics,
     get_insider_trades,
@@ -111,19 +112,33 @@ def growth_analyst_agent(state: AgentState, agent_id: str = "growth_analyst_agen
                 "weighted_score": round(weighted_score, 2)
             }
         }
+        raw_evidence = build_raw_evidence(
+            factor="growth",
+            signal=signal,
+            confidence=confidence,
+            metrics={
+                "weighted_score": weighted_score,
+                "component_scores": scores,
+            },
+            components=reasoning,
+            weights=weights,
+            metadata={
+                "financial_metric_period": "ttm",
+                "financial_metric_limit": 12,
+                "insider_trade_limit": 1000,
+            },
+        )
 
         growth_analysis[ticker] = {
             "signal": signal,
             "confidence": confidence,
             "reasoning": reasoning,
+            "raw_evidence": raw_evidence,
         }
         progress.update_status(agent_id, ticker, "Done", analysis=json.dumps(reasoning, indent=4))
 
     # ---- Emit message (for LLM tool chain) ----
     msg = HumanMessage(content=json.dumps(growth_analysis), name=agent_id)
-    if state["metadata"].get("show_reasoning"):
-        show_agent_reasoning(growth_analysis, "Growth Analysis Agent")
-
     # Add the signal to the analyst_signals list
     state["data"]["analyst_signals"][agent_id] = growth_analysis
 

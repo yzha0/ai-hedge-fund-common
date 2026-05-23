@@ -12,6 +12,7 @@ from .engine import BacktestEngine
 from src.llm.models import LLM_ORDER, OLLAMA_LLM_ORDER, get_model_info, ModelProvider
 from src.utils.analysts import ANALYST_ORDER
 from src.main import run_hedge_fund
+from src.utils.architecture import FLAT_CURRENT_ARCHITECTURE
 from src.utils.ollama import ensure_ollama_and_model
 
 
@@ -143,6 +144,7 @@ def main() -> int:
         model_name=model_name,
         model_provider=model_provider,
         selected_analysts=selected_analysts,
+        architecture_mode=FLAT_CURRENT_ARCHITECTURE,
         initial_margin_requirement=args.margin_requirement,
         look_back_period_months=max(1, args.look_back_months),
     )
@@ -173,6 +175,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 
 

@@ -9,9 +9,10 @@ configurable weights.
 import json
 import statistics
 from langchain_core.messages import HumanMessage
-from src.graph.state import AgentState, show_agent_reasoning
+from src.graph.state import AgentState
 from src.utils.progress import progress
 from src.utils.api_key import get_api_key_from_state
+from src.agents.researchers.evidence import build_raw_evidence
 from src.tools.api import (
     get_financial_metrics,
     get_market_cap,
@@ -199,19 +200,48 @@ def valuation_analyst_agent(state: AgentState, agent_id: str = "valuation_analys
                 "wacc_used": f"{wacc:.1%}",
                 "fcf_periods_analyzed": len(fcf_history)
             }
+        raw_evidence = build_raw_evidence(
+            factor="valuation",
+            signal=signal,
+            confidence=confidence,
+            metrics={
+                "market_cap": market_cap,
+                "weighted_gap": weighted_gap,
+                "total_weight": total_weight,
+                "wacc": wacc,
+                "fcf_history": fcf_history,
+                "revenue_growth": most_recent_metrics.revenue_growth,
+                "free_cash_flow_growth": most_recent_metrics.free_cash_flow_growth,
+                "earnings_growth": most_recent_metrics.earnings_growth,
+                "debt_to_equity": most_recent_metrics.debt_to_equity,
+                "interest_coverage": most_recent_metrics.interest_coverage,
+                "price_to_book_ratio": most_recent_metrics.price_to_book_ratio,
+                "book_value_growth": most_recent_metrics.book_value_growth,
+            },
+            components={
+                "valuation_methods": method_values,
+                "dcf_scenarios": dcf_results if 'dcf_results' in locals() else {},
+                "reasoning": reasoning,
+            },
+            weights={method: values["weight"] for method, values in method_values.items()},
+            metadata={
+                "financial_metric_period": "ttm",
+                "financial_metric_limit": 8,
+                "line_item_period": "ttm",
+                "line_item_limit": 8,
+            },
+        )
 
         valuation_analysis[ticker] = {
             "signal": signal,
             "confidence": confidence,
             "reasoning": reasoning,
+            "raw_evidence": raw_evidence,
         }
         progress.update_status(agent_id, ticker, "Done", analysis=json.dumps(reasoning, indent=4))
 
     # ---- Emit message (for LLM tool chain) ----
     msg = HumanMessage(content=json.dumps(valuation_analysis), name=agent_id)
-    if state["metadata"].get("show_reasoning"):
-        show_agent_reasoning(valuation_analysis, "Valuation Analysis Agent")
-
     # Add the signal to the analyst_signals list
     state["data"]["analyst_signals"][agent_id] = valuation_analysis
 

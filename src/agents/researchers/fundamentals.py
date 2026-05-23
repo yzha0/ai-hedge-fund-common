@@ -1,9 +1,10 @@
 from langchain_core.messages import HumanMessage
-from src.graph.state import AgentState, show_agent_reasoning
+from src.graph.state import AgentState
 from src.utils.api_key import get_api_key_from_state
 from src.utils.progress import progress
 import json
 
+from src.agents.researchers.evidence import build_raw_evidence
 from src.tools.api import get_financial_metrics
 
 
@@ -52,10 +53,23 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
             (operating_margin, 0.15),  # Strong operating efficiency
         ]
         profitability_score = sum(metric is not None and metric > threshold for metric, threshold in thresholds)
+        profitability_metrics = {
+            "return_on_equity": return_on_equity,
+            "net_margin": net_margin,
+            "operating_margin": operating_margin,
+            "score": profitability_score,
+            "max_score": len(thresholds),
+            "thresholds": {
+                "return_on_equity": 0.15,
+                "net_margin": 0.20,
+                "operating_margin": 0.15,
+            },
+        }
 
         signals.append("bullish" if profitability_score >= 2 else "bearish" if profitability_score == 0 else "neutral")
         reasoning["profitability_signal"] = {
             "signal": signals[0],
+            "metrics": profitability_metrics,
             "details": (f"ROE: {return_on_equity:.2%}" if return_on_equity else "ROE: N/A") + ", " + (f"Net Margin: {net_margin:.2%}" if net_margin else "Net Margin: N/A") + ", " + (f"Op Margin: {operating_margin:.2%}" if operating_margin else "Op Margin: N/A"),
         }
 
@@ -71,10 +85,23 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
             (book_value_growth, 0.10),  # 10% book value growth
         ]
         growth_score = sum(metric is not None and metric > threshold for metric, threshold in thresholds)
+        growth_metrics = {
+            "revenue_growth": revenue_growth,
+            "earnings_growth": earnings_growth,
+            "book_value_growth": book_value_growth,
+            "score": growth_score,
+            "max_score": len(thresholds),
+            "thresholds": {
+                "revenue_growth": 0.10,
+                "earnings_growth": 0.10,
+                "book_value_growth": 0.10,
+            },
+        }
 
         signals.append("bullish" if growth_score >= 2 else "bearish" if growth_score == 0 else "neutral")
         reasoning["growth_signal"] = {
             "signal": signals[1],
+            "metrics": growth_metrics,
             "details": (f"Revenue Growth: {revenue_growth:.2%}" if revenue_growth else "Revenue Growth: N/A") + ", " + (f"Earnings Growth: {earnings_growth:.2%}" if earnings_growth else "Earnings Growth: N/A"),
         }
 
@@ -92,10 +119,24 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
             health_score += 1
         if free_cash_flow_per_share and earnings_per_share and free_cash_flow_per_share > earnings_per_share * 0.8:  # Strong FCF conversion
             health_score += 1
+        health_metrics = {
+            "current_ratio": current_ratio,
+            "debt_to_equity": debt_to_equity,
+            "free_cash_flow_per_share": free_cash_flow_per_share,
+            "earnings_per_share": earnings_per_share,
+            "score": health_score,
+            "max_score": 3,
+            "thresholds": {
+                "current_ratio": 1.5,
+                "debt_to_equity": 0.5,
+                "fcf_to_eps": 0.8,
+            },
+        }
 
         signals.append("bullish" if health_score >= 2 else "bearish" if health_score == 0 else "neutral")
         reasoning["financial_health_signal"] = {
             "signal": signals[2],
+            "metrics": health_metrics,
             "details": (f"Current Ratio: {current_ratio:.2f}" if current_ratio else "Current Ratio: N/A") + ", " + (f"D/E: {debt_to_equity:.2f}" if debt_to_equity else "D/E: N/A"),
         }
 
@@ -111,10 +152,23 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
             (ps_ratio, 5),  # Reasonable P/S ratio
         ]
         price_ratio_score = sum(metric is not None and metric > threshold for metric, threshold in thresholds)
+        price_ratio_metrics = {
+            "price_to_earnings_ratio": pe_ratio,
+            "price_to_book_ratio": pb_ratio,
+            "price_to_sales_ratio": ps_ratio,
+            "expensive_ratio_count": price_ratio_score,
+            "max_score": len(thresholds),
+            "thresholds": {
+                "price_to_earnings_ratio": 25,
+                "price_to_book_ratio": 3,
+                "price_to_sales_ratio": 5,
+            },
+        }
 
         signals.append("bearish" if price_ratio_score >= 2 else "bullish" if price_ratio_score == 0 else "neutral")
         reasoning["price_ratios_signal"] = {
             "signal": signals[3],
+            "metrics": price_ratio_metrics,
             "details": (f"P/E: {pe_ratio:.2f}" if pe_ratio else "P/E: N/A") + ", " + (f"P/B: {pb_ratio:.2f}" if pb_ratio else "P/B: N/A") + ", " + (f"P/S: {ps_ratio:.2f}" if ps_ratio else "P/S: N/A"),
         }
 
@@ -133,11 +187,24 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
         # Calculate confidence level
         total_signals = len(signals)
         confidence = round(max(bullish_signals, bearish_signals) / total_signals, 2) * 100
+        raw_evidence = build_raw_evidence(
+            factor="fundamentals",
+            signal=overall_signal,
+            confidence=confidence,
+            metrics={
+                "bullish_signals": bullish_signals,
+                "bearish_signals": bearish_signals,
+                "neutral_signals": signals.count("neutral"),
+                "total_signals": total_signals,
+            },
+            components=reasoning,
+        )
 
         fundamental_analysis[ticker] = {
             "signal": overall_signal,
             "confidence": confidence,
             "reasoning": reasoning,
+            "raw_evidence": raw_evidence,
         }
 
         progress.update_status(agent_id, ticker, "Done", analysis=json.dumps(reasoning, indent=4))
@@ -147,10 +214,6 @@ def fundamentals_analyst_agent(state: AgentState, agent_id: str = "fundamentals_
         content=json.dumps(fundamental_analysis),
         name=agent_id,
     )
-
-    # Print the reasoning if the flag is set
-    if state["metadata"]["show_reasoning"]:
-        show_agent_reasoning(fundamental_analysis, "Fundamental Analysis Agent")
 
     # Add the signal to the analyst_signals list
     state["data"]["analyst_signals"][agent_id] = fundamental_analysis

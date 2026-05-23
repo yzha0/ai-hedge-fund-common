@@ -4,6 +4,7 @@ from typing import Callable, Sequence, Dict, Any
 
 from .types import AgentOutput, AgentDecisions, PortfolioSnapshot, ActionLiteral, Action
 from .portfolio import Portfolio
+from src.utils.architecture import FLAT_CURRENT_ARCHITECTURE
 
 
 class AgentController:
@@ -20,6 +21,7 @@ class AgentController:
         model_name: str,
         model_provider: str,
         selected_analysts: Sequence[str] | None,
+        architecture_mode: str = FLAT_CURRENT_ARCHITECTURE,
     ) -> AgentOutput:
         '''
         run_agent is responsible for invoking the trading agent 
@@ -48,6 +50,7 @@ class AgentController:
             model_name=model_name,
             model_provider=model_provider,
             selected_analysts=list(selected_analysts) if selected_analysts is not None else None,
+            architecture_mode=architecture_mode,
         )
 
         # Normalize outputs to avoid None/missing keys
@@ -76,5 +79,3 @@ class AgentController:
             "analyst_signals": analyst_signals_in,
         }
         return normalized_output
-
-

@@ -6,6 +6,7 @@ import questionary
 from colorama import Fore, Style
 
 from src.utils.analysts import ANALYST_ORDER
+from src.utils.architecture import ARCHITECTURE_MODES, FLAT_CURRENT_ARCHITECTURE
 from src.llm.models import LLM_ORDER, OLLAMA_LLM_ORDER, get_model_info, ModelProvider, find_model_by_name
 from src.utils.ollama import ensure_ollama_and_model
 
@@ -218,6 +219,7 @@ class CLIInputs:
     selected_analysts: list[str]
     model_name: str
     model_provider: str
+    architecture_mode: str
     start_date: str
     end_date: str
     look_back_months: int
@@ -243,6 +245,13 @@ def parse_cli_inputs(
     add_date_args(parser, default_months_back=default_months_back)
 
     # Funding flags (standardized, with alias)
+    parser.add_argument(
+        "--architecture-mode",
+        dest="architecture_mode",
+        choices=list(ARCHITECTURE_MODES),
+        default=FLAT_CURRENT_ARCHITECTURE,
+        help="Workflow architecture mode to use for the run.",
+    )
     parser.add_argument(
         "--initial-cash",
         "--initial-capital",
@@ -288,6 +297,7 @@ def parse_cli_inputs(
         selected_analysts=selected_analysts,
         model_name=model_name,
         model_provider=model_provider,
+        architecture_mode=getattr(args, "architecture_mode", FLAT_CURRENT_ARCHITECTURE),
         start_date=start_date,
         end_date=end_date,
         look_back_months=look_back_months,
@@ -297,4 +307,3 @@ def parse_cli_inputs(
         show_agent_graph=getattr(args, "show_agent_graph", False),
         raw_args=args,
     )
-

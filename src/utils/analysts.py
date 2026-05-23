@@ -1,32 +1,58 @@
 """Constants and utilities related to analysts configuration."""
 
-from src.agents import portfolio_manager
-from src.agents.aswath_damodaran import aswath_damodaran_agent
-from src.agents.ben_graham import ben_graham_agent
-from src.agents.bill_ackman import bill_ackman_agent
-from src.agents.cathie_wood import cathie_wood_agent
-from src.agents.charlie_munger import charlie_munger_agent
-from src.agents.fundamentals import fundamentals_analyst_agent
-from src.agents.michael_burry import michael_burry_agent
-from src.agents.phil_fisher import phil_fisher_agent
-from src.agents.peter_lynch import peter_lynch_agent
-from src.agents.sentiment import sentiment_analyst_agent
-from src.agents.stanley_druckenmiller import stanley_druckenmiller_agent
-from src.agents.technicals import technical_analyst_agent
-from src.agents.valuation import valuation_analyst_agent
-from src.agents.warren_buffett import warren_buffett_agent
-from src.agents.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
-from src.agents.mohnish_pabrai import mohnish_pabrai_agent
-from src.agents.nassim_taleb import nassim_taleb_agent
-from src.agents.news_sentiment import news_sentiment_agent
-from src.agents.growth_agent import growth_analyst_agent
+import json
+from pathlib import Path
+
+from src.agents.investors.aswath_damodaran import aswath_damodaran_agent
+from src.agents.investors.ben_graham import ben_graham_agent
+from src.agents.investors.bill_ackman import bill_ackman_agent
+from src.agents.investors.cathie_wood import cathie_wood_agent
+from src.agents.investors.charlie_munger import charlie_munger_agent
+from src.agents.investors.michael_burry import michael_burry_agent
+from src.agents.investors.phil_fisher import phil_fisher_agent
+from src.agents.investors.peter_lynch import peter_lynch_agent
+from src.agents.investors.stanley_druckenmiller import stanley_druckenmiller_agent
+from src.agents.investors.warren_buffett import warren_buffett_agent
+from src.agents.investors.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
+from src.agents.investors.mohnish_pabrai import mohnish_pabrai_agent
+from src.agents.investors.nassim_taleb import nassim_taleb_agent
+from src.agents.researchers.fundamentals import fundamentals_analyst_agent
+from src.agents.researchers.growth_agent import growth_analyst_agent
+from src.agents.researchers.news_sentiment import news_sentiment_agent
+from src.agents.researchers.sentiment import sentiment_analyst_agent
+from src.agents.researchers.technicals import technical_analyst_agent
+from src.agents.researchers.valuation import valuation_analyst_agent
+
+
+def _load_investor_principles() -> dict[str, str]:
+    """Load detailed investor principles used as richer investing style descriptions."""
+    principles_path = Path(__file__).resolve().parents[2] / "addition" / "investor_principles_en.json"
+    try:
+        with principles_path.open("r", encoding="utf-8") as principles_file:
+            principles = json.load(principles_file)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    return {
+        item["name"]: item["principles"]
+        for item in principles
+        if isinstance(item, dict) and item.get("name") and item.get("principles")
+    }
+
+
+INVESTOR_PRINCIPLES_BY_NAME = _load_investor_principles()
+
+
+def _investor_principles(display_name: str, fallback: str) -> str:
+    return INVESTOR_PRINCIPLES_BY_NAME.get(display_name, fallback)
+
 
 # Define analyst configuration - single source of truth
 ANALYST_CONFIG = {
     "aswath_damodaran": {
         "display_name": "Aswath Damodaran",
         "description": "The Dean of Valuation",
-        "investing_style": "Focuses on intrinsic value and financial metrics to assess investment opportunities through rigorous valuation analysis.",
+        "investing_style": _investor_principles("Aswath Damodaran", "Focuses on intrinsic value and financial metrics to assess investment opportunities through rigorous valuation analysis."),
         "agent_func": aswath_damodaran_agent,
         "type": "analyst",
         "order": 0,
@@ -34,7 +60,7 @@ ANALYST_CONFIG = {
     "ben_graham": {
         "display_name": "Ben Graham",
         "description": "The Father of Value Investing",
-        "investing_style": "Emphasizes a margin of safety and invests in undervalued companies with strong fundamentals through systematic value analysis.",
+        "investing_style": _investor_principles("Ben Graham", "Emphasizes a margin of safety and invests in undervalued companies with strong fundamentals through systematic value analysis."),
         "agent_func": ben_graham_agent,
         "type": "analyst",
         "order": 1,
@@ -42,7 +68,7 @@ ANALYST_CONFIG = {
     "bill_ackman": {
         "display_name": "Bill Ackman",
         "description": "The Activist Investor",
-        "investing_style": "Seeks to influence management and unlock value through strategic activism and contrarian investment positions.",
+        "investing_style": _investor_principles("Bill Ackman", "Seeks to influence management and unlock value through strategic activism and contrarian investment positions."),
         "agent_func": bill_ackman_agent,
         "type": "analyst",
         "order": 2,
@@ -50,7 +76,7 @@ ANALYST_CONFIG = {
     "cathie_wood": {
         "display_name": "Cathie Wood",
         "description": "The Queen of Growth Investing",
-        "investing_style": "Focuses on disruptive innovation and growth, investing in companies that are leading technological advancements and market disruption.",
+        "investing_style": _investor_principles("Cathie Wood", "Focuses on disruptive innovation and growth, investing in companies that are leading technological advancements and market disruption."),
         "agent_func": cathie_wood_agent,
         "type": "analyst",
         "order": 3,
@@ -58,7 +84,7 @@ ANALYST_CONFIG = {
     "charlie_munger": {
         "display_name": "Charlie Munger",
         "description": "The Rational Thinker",
-        "investing_style": "Advocates for value investing with a focus on quality businesses and long-term growth through rational decision-making.",
+        "investing_style": _investor_principles("Charlie Munger", "Advocates for value investing with a focus on quality businesses and long-term growth through rational decision-making."),
         "agent_func": charlie_munger_agent,
         "type": "analyst",
         "order": 4,
@@ -66,7 +92,7 @@ ANALYST_CONFIG = {
     "michael_burry": {
         "display_name": "Michael Burry",
         "description": "The Big Short Contrarian",
-        "investing_style": "Makes contrarian bets, often shorting overvalued markets and investing in undervalued assets through deep fundamental analysis.",
+        "investing_style": _investor_principles("Michael Burry", "Makes contrarian bets, often shorting overvalued markets and investing in undervalued assets through deep fundamental analysis."),
         "agent_func": michael_burry_agent,
         "type": "analyst",
         "order": 5,
@@ -90,7 +116,7 @@ ANALYST_CONFIG = {
     "peter_lynch": {
         "display_name": "Peter Lynch",
         "description": "The 10-Bagger Investor",
-        "investing_style": "Invests in companies with understandable business models and strong growth potential using the 'buy what you know' strategy.",
+        "investing_style": _investor_principles("Peter Lynch", "Invests in companies with understandable business models and strong growth potential using the 'buy what you know' strategy."),
         "agent_func": peter_lynch_agent,
         "type": "analyst",
         "order": 8,
@@ -98,7 +124,7 @@ ANALYST_CONFIG = {
     "phil_fisher": {
         "display_name": "Phil Fisher",
         "description": "The Scuttlebutt Investor",
-        "investing_style": "Emphasizes investing in companies with strong management and innovative products, focusing on long-term growth through scuttlebutt research.",
+        "investing_style": _investor_principles("Phil Fisher", "Emphasizes investing in companies with strong management and innovative products, focusing on long-term growth through scuttlebutt research."),
         "agent_func": phil_fisher_agent,
         "type": "analyst",
         "order": 9,
@@ -106,7 +132,7 @@ ANALYST_CONFIG = {
     "rakesh_jhunjhunwala": {
         "display_name": "Rakesh Jhunjhunwala",
         "description": "The Big Bull Of India",
-        "investing_style": "Leverages macroeconomic insights to invest in high-growth sectors, particularly within emerging markets and domestic opportunities.",
+        "investing_style": _investor_principles("Rakesh Jhunjhunwala", "Leverages macroeconomic insights to invest in high-growth sectors, particularly within emerging markets and domestic opportunities."),
         "agent_func": rakesh_jhunjhunwala_agent,
         "type": "analyst",
         "order": 10,
@@ -114,7 +140,7 @@ ANALYST_CONFIG = {
     "stanley_druckenmiller": {
         "display_name": "Stanley Druckenmiller",
         "description": "The Macro Investor",
-        "investing_style": "Focuses on macroeconomic trends, making large bets on currencies, commodities, and interest rates through top-down analysis.",
+        "investing_style": _investor_principles("Stanley Druckenmiller", "Focuses on macroeconomic trends, making large bets on currencies, commodities, and interest rates through top-down analysis."),
         "agent_func": stanley_druckenmiller_agent,
         "type": "analyst",
         "order": 11,
@@ -122,7 +148,7 @@ ANALYST_CONFIG = {
     "warren_buffett": {
         "display_name": "Warren Buffett",
         "description": "The Oracle of Omaha",
-        "investing_style": "Seeks companies with strong fundamentals and competitive advantages through value investing and long-term ownership.",
+        "investing_style": _investor_principles("Warren Buffett", "Seeks companies with strong fundamentals and competitive advantages through value investing and long-term ownership."),
         "agent_func": warren_buffett_agent,
         "type": "analyst",
         "order": 12,

@@ -61,6 +61,7 @@ if __name__ == "__main__":
         model_name=inputs.model_name,
         model_provider=inputs.model_provider,
         selected_analysts=inputs.selected_analysts,
+        architecture_mode=inputs.architecture_mode,
         initial_margin_requirement=inputs.margin_requirement,
         look_back_period_months=inputs.look_back_months,
     )

@@ -1,12 +1,13 @@
 from langchain_core.messages import HumanMessage
-from src.graph.state import AgentState, show_agent_reasoning
+from src.graph.state import AgentState
 from src.utils.progress import progress
 import pandas as pd
 import numpy as np
 import json
 from src.utils.api_key import get_api_key_from_state
 from src.tools.api import get_insider_trades, get_company_news
-from src.agents.news_sentiment import analyze_news_sentiment_data
+from src.agents.researchers.evidence import build_raw_evidence
+from src.agents.researchers.news_sentiment import analyze_news_sentiment_data
 
 
 ##### Sentiment Agent #####
@@ -107,11 +108,32 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
                 "signal_determination": f"{'Bullish' if bullish_signals > bearish_signals else 'Bearish' if bearish_signals > bullish_signals else 'Neutral'} based on weighted signal comparison"
             }
         }
+        raw_evidence = build_raw_evidence(
+            factor="sentiment",
+            signal=overall_signal,
+            confidence=confidence,
+            metrics={
+                "total_weighted_bullish": bullish_signals,
+                "total_weighted_bearish": bearish_signals,
+                "total_weighted_signals": total_weighted_signals,
+                "insider_signal_count": len(insider_signals),
+                "news_signal_count": len(news_signals),
+            },
+            components={
+                **reasoning,
+                "news_raw_evidence": news_sentiment_result.get("raw_evidence", {}),
+            },
+            weights={
+                "insider": insider_weight,
+                "news": news_weight,
+            },
+        )
 
         sentiment_analysis[ticker] = {
             "signal": overall_signal,
             "confidence": confidence,
             "reasoning": reasoning,
+            "raw_evidence": raw_evidence,
         }
 
         progress.update_status(agent_id, ticker, "Done", analysis=json.dumps(reasoning, indent=4))
@@ -121,10 +143,6 @@ def sentiment_analyst_agent(state: AgentState, agent_id: str = "sentiment_analys
         content=json.dumps(sentiment_analysis),
         name=agent_id,
     )
-
-    # Print the reasoning if the flag is set
-    if state["metadata"]["show_reasoning"]:
-        show_agent_reasoning(sentiment_analysis, "Sentiment Analysis Agent")
 
     # Add the signal to the analyst_signals list
     state["data"]["analyst_signals"][agent_id] = sentiment_analysis

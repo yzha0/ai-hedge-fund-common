@@ -43,6 +43,7 @@ export interface BaseHedgeFundRequest {
   model_provider?: ModelProvider;
   margin_requirement?: number;
   portfolio_positions?: PortfolioPosition[];
+  architecture_mode?: string;
 }
 
 export interface HedgeFundRequest extends BaseHedgeFundRequest {

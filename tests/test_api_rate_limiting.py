@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import Mock, patch, call
 from requests.exceptions import ConnectionError
 
-from src.tools.api import _make_api_request, get_prices
+from src.tools.api import _make_api_request, get_company_news, get_prices
 
 class TestRateLimiting:
     """Test suite for API rate limiting functionality."""
@@ -35,8 +35,8 @@ class TestRateLimiting:
         # Verify requests.get was called twice
         assert mock_get.call_count == 2
         mock_get.assert_has_calls([
-            call(url, headers=headers),
-            call(url, headers=headers)
+            call(url, headers=headers, timeout=30),
+            call(url, headers=headers, timeout=30)
         ])
         
         # Verify sleep was called once with 60 seconds (first retry)
@@ -107,8 +107,8 @@ class TestRateLimiting:
         # Verify requests.post was called twice
         assert mock_post.call_count == 2
         mock_post.assert_has_calls([
-            call(url, headers=headers, json=json_data),
-            call(url, headers=headers, json=json_data)
+            call(url, headers=headers, json=json_data, timeout=30),
+            call(url, headers=headers, json=json_data, timeout=30)
         ])
         
         # Verify sleep was called once with 60 seconds (first retry)
@@ -168,9 +168,10 @@ class TestRateLimiting:
         # Verify sleep was never called
         mock_sleep.assert_not_called()
 
+    @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_handles_connection_error_without_raising(self, mock_get):
-        """Test that transport failures return a synthetic error response."""
+    def test_retries_connection_error_before_returning_synthetic_response(self, mock_get, mock_sleep):
+        """Test that transport failures are retried before returning a synthetic error response."""
         mock_get.side_effect = ConnectionError("dns lookup failed")
 
         headers = {"X-API-KEY": "test-key"}
@@ -181,6 +182,8 @@ class TestRateLimiting:
         assert result.status_code == 503
         assert result.url == url
         assert "dns lookup failed" in result.text
+        assert mock_get.call_count == 4
+        mock_sleep.assert_has_calls([call(5), call(10), call(15)])
 
     @patch('src.tools.api._cache')
     @patch('src.tools.api.time.sleep')
@@ -258,6 +261,81 @@ class TestRateLimiting:
         assert mock_sleep.call_count == 2
         expected_calls = [call(60), call(90)]
         mock_sleep.assert_has_calls(expected_calls)
+
+    @patch('src.tools.api._cache')
+    @patch('src.tools.api.requests.get')
+    def test_company_news_caps_page_limit_at_api_max(self, mock_get, mock_cache):
+        """Test that company news requests respect the API's limit<=10 constraint."""
+        mock_cache.get_company_news.return_value = None
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "news": [
+                {
+                    "ticker": "AAPL",
+                    "title": "Apple headline",
+                    "date": "2026-05-22T12:00:00Z",
+                    "url": "https://example.com/apple",
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        result = get_company_news("AAPL", "2026-05-22", limit=50, api_key="test-key")
+
+        assert len(result) == 1
+        requested_url = mock_get.call_args.args[0]
+        assert "limit=10" in requested_url
+        assert "end_date=2026-05-22" in requested_url
+
+    @patch('src.tools.api._cache')
+    @patch('src.tools.api.requests.get')
+    def test_company_news_uses_remaining_limit_for_last_page(self, mock_get, mock_cache):
+        """Test that pagination uses the remaining requested count after full pages."""
+        mock_cache.get_company_news.return_value = None
+
+        first_response = Mock()
+        first_response.status_code = 200
+        first_response.json.return_value = {
+            "news": [
+                {
+                    "ticker": "AAPL",
+                    "title": f"Apple headline {idx}",
+                    "date": f"2026-05-{22 - idx:02d}T12:00:00Z",
+                    "url": f"https://example.com/apple-{idx}",
+                }
+                for idx in range(10)
+            ]
+        }
+        second_response = Mock()
+        second_response.status_code = 200
+        second_response.json.return_value = {
+            "news": [
+                {
+                    "ticker": "AAPL",
+                    "title": f"Apple follow-up {idx}",
+                    "date": f"2026-05-{12 - idx:02d}T12:00:00Z",
+                    "url": f"https://example.com/apple-follow-up-{idx}",
+                }
+                for idx in range(5)
+            ]
+        }
+        mock_get.side_effect = [first_response, second_response]
+
+        result = get_company_news(
+            "AAPL",
+            "2026-05-22",
+            start_date="2026-05-01",
+            limit=15,
+            api_key="test-key",
+        )
+
+        assert len(result) == 15
+        first_url = mock_get.call_args_list[0].args[0]
+        second_url = mock_get.call_args_list[1].args[0]
+        assert "limit=10" in first_url
+        assert "limit=5" in second_url
 
 
 if __name__ == "__main__":

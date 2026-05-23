@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.graph.state import AgentState, show_agent_reasoning
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
+from src.utils.architecture import MANAGER_SLEEVES_ARCHITECTURE
 from src.utils.progress import progress
 from src.utils.llm import call_llm
 
@@ -24,6 +25,9 @@ class PortfolioManagerOutput(BaseModel):
 ##### Portfolio Management Agent #####
 def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_manager"):
     """Makes final trading decisions and generates orders for multiple tickers"""
+    architecture_mode = state.get("metadata", {}).get("architecture_mode")
+    if architecture_mode == MANAGER_SLEEVES_ARCHITECTURE:
+        return _manager_sleeves_portfolio_management_agent(state, agent_id)
 
     portfolio = state["data"]["portfolio"]
     analyst_signals = state["data"]["analyst_signals"]
@@ -90,6 +94,77 @@ def portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_man
     return {
         "messages": state["messages"] + [message],
         "data": state["data"],
+    }
+
+
+def _manager_sleeves_portfolio_management_agent(state: AgentState, agent_id: str = "portfolio_manager"):
+    """Convert allocator target net shares into executable single-step trade instructions."""
+    data = state["data"]
+    portfolio = data["portfolio"]
+    positions = portfolio.get("positions", {}) or {}
+    allocations = data.get("capital_allocation", {}).get("ticker_allocations", {})
+    tickers = data["tickers"]
+
+    decisions: dict[str, PortfolioDecision] = {}
+    current_prices = data.get("current_prices", {})
+    for ticker in tickers:
+        progress.update_status(agent_id, ticker, "Translating target allocation into trade action")
+        allocation = allocations.get(ticker, {})
+        target_net_shares = int(allocation.get("target_net_shares", 0) or 0)
+        pos = positions.get(
+            ticker,
+            {"long": 0, "long_cost_basis": 0.0, "short": 0, "short_cost_basis": 0.0},
+        )
+        long_shares = int(pos.get("long", 0) or 0)
+        short_shares = int(pos.get("short", 0) or 0)
+        current_net_shares = long_shares - short_shares
+        delta = target_net_shares - current_net_shares
+
+        action = "hold"
+        quantity = 0
+        if delta > 0:
+            if short_shares > 0:
+                action = "cover"
+                quantity = min(short_shares, delta)
+            else:
+                action = "buy"
+                quantity = delta
+        elif delta < 0:
+            reduction = abs(delta)
+            if long_shares > 0:
+                action = "sell"
+                quantity = min(long_shares, reduction)
+            else:
+                action = "short"
+                quantity = reduction
+
+        reasoning = allocation.get("reasoning", "Allocator produced no change")
+        if action == "hold":
+            reasoning = "No trade needed after allocation review"
+
+        decisions[ticker] = PortfolioDecision(
+            action=action,
+            quantity=int(max(0, quantity)),
+            confidence=int(round(float(allocation.get("allocator_confidence", 0.0) or 0.0))),
+            reasoning=reasoning,
+        )
+
+    data["execution_plan"] = {ticker: decision.model_dump() for ticker, decision in decisions.items()}
+    if current_prices:
+        data["current_prices"] = current_prices
+
+    message = HumanMessage(
+        content=json.dumps({ticker: decision.model_dump() for ticker, decision in decisions.items()}),
+        name=agent_id,
+    )
+
+    if state["metadata"]["show_reasoning"]:
+        show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in decisions.items()}, "Portfolio Manager")
+
+    progress.update_status(agent_id, None, "Done")
+    return {
+        "messages": state["messages"] + [message],
+        "data": data,
     }
 
 

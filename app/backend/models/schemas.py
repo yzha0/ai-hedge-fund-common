@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from src.llm.models import ModelProvider
 from enum import Enum
 from app.backend.services.graph import extract_base_agent_key
+from src.utils.architecture import FLAT_CURRENT_ARCHITECTURE
 
 
 class FlowRunStatus(str, Enum):
@@ -68,6 +69,7 @@ class BaseHedgeFundRequest(BaseModel):
     margin_requirement: float = 0.0
     portfolio_positions: Optional[List[PortfolioPosition]] = None
     api_keys: Optional[Dict[str, str]] = None
+    architecture_mode: str = FLAT_CURRENT_ARCHITECTURE
 
     def get_agent_ids(self) -> List[str]:
         """Extract agent IDs from graph structure"""
