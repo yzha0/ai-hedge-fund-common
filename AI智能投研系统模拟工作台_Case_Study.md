@@ -355,12 +355,12 @@ flowchart TD
     D3 --> E3[Sleeve Risk]
     D4 --> E4[Sleeve Risk]
 
-    E1 --> F[Capital Allocator]
+    E1 --> F[Firm Risk Committee]
     E2 --> F
     E3 --> F
     E4 --> F
 
-    F --> G[Firm Risk Committee]
+    F --> G[Capital Allocator]
     G --> H[Execution Simulator]
     H --> I[Post-Trade Attribution]
     I --> J[Analyst Reliability + Sleeve Budget Update]
@@ -419,7 +419,7 @@ Research Support / Simulation Only / Human Review Required
 
 ---
 
-## 06. 信息架构与核心页面v1
+## 06. 信息架构与核心页面 （Subject to change)
 
 ### 6.1 产品信息架构
 
@@ -877,14 +877,6 @@ raw_budget = softmax(sleeve_score / temperature) * total_risk_budget
 final_budget = apply_firm_caps(raw_budget)
 ```
 
-这样做的好处：
-
-- 可解释；
-- 好 demo；
-- 易写验收标准；
-- 能和 attribution loop 连接；
-- 适合作为 PM 作品集第一版。
-
 ---
 
 ## 08. MVP 功能需求
@@ -1065,134 +1057,6 @@ Firm-level Risk：
 
 ---
 
-## 09. 实施计划与指标假设
-
-### Phase 0：项目拆解与问题定义
-
-**目标**  
-完成现有开源项目拆解，明确 redesign 方向。
-
-**交付物**
-
-- 当前 workflow 图；
-- 功能 / 架构 / 风控 / 工程诊断表；
-- 目标用户定义；
-- redesign thesis。
-
-**指标假设**
-
-- 评审者能在 15 秒内理解 before / after 差异；
-- 核心问题能被一句话表达清楚：不是 agent 不够多，而是证据、治理、复盘没有产品化。
-
----
-
-### Phase 1：Evidence Layer + Research Workspace
-
-**目标**  
-先把 agent 输出转化为可追溯 evidence。
-
-**交付物**
-
-- Evidence Schema；
-- analyst output normalizer；
-- Research Workspace wireframe；
-- Evidence Board prototype。
-
-**指标假设**
-
-产品指标：
-
-- 从输入 ticker 到看到第一版 evidence summary：< 90 秒；
-- evidence 可追溯率：≥ 80%；
-- 用户能在 2 次点击内查看 supporting evidence。
-
-工程指标：
-
-- 主要 analyst 输出 schema mapping 覆盖率：≥ 80%；
-- 核心数据字段缺失率：≤ 20%。
-
----
-
-### Phase 2：Sleeve PM + Proposal Review
-
-**目标**  
-从单一 PM 决策改为多风格 proposal 评审。
-
-**交付物**
-
-- 4 个 Sleeve PM 角色定义；
-- Proposal Card；
-- Sleeve Proposal Panel；
-- proposal comparison view。
-
-**指标假设**
-
-产品指标：
-
-- 每个 ticker 至少生成 4 个风格化 proposal；
-- proposal 中 supporting evidence 覆盖率：≥ 80%；
-- 用户可以在一个页面比较不同 sleeve 分歧。
-
-质量指标：
-
-- proposal 与 evidence 的一致性评分：≥ 0.8；
-- 明显无证据支持的 recommendation 比例：≤ 10%。
-
----
-
-### Phase 3：Two-layer Risk + Capital Allocator
-
-**目标**  
-把风险审批和预算分配产品化。
-
-**交付物**
-
-- Sleeve Risk Check；
-- Firm Risk Cockpit；
-- Capital Allocator v1；
-- approval / scale / block log。
-
-**指标假设**
-
-产品指标：
-
-- 每个 proposal 都有 risk decision log；
-- 每次 haircut / veto 都能展示理由；
-- 用户可以看到 allocation 前后预算变化。
-
-风险指标：
-
-- firm-level risk checks 覆盖至少 5 类风险：gross exposure、net exposure、sector concentration、correlation / crowding、liquidity。
-
----
-
-### Phase 4：Attribution + Report Builder
-
-**目标**  
-形成完整闭环，并产出作品集可展示成果。
-
-**交付物**
-
-- Attribution Dashboard；
-- analyst reliability score；
-- sleeve scorecard；
-- Markdown / PDF report export；
-- 90–120 秒 demo video。
-
-**指标假设**
-
-产品指标：
-
-- 报告导出成功率：≥ 95%；
-- 每个 proposal 都能关联到 outcome record；
-- 用户能看到 analyst / sleeve 的历史表现。
-
-作品集指标：
-
-- Case 包含 before workflow、after workflow、核心页面、指标假设、反思；
-- Demo video 能在 2 分钟内讲清楚完整价值链。
-
----
 
 ## 10. 商业化与风险边界
 
