@@ -336,14 +336,12 @@ flowchart TD
     A --> B3[Valuation Analyst]
     A --> B4[Sentiment Analyst]
     A --> B5[News Sentiment Analyst]
-    A --> B6[Investor Persona Analysts]
 
     B1 --> C[Research Synthesizer]
     B2 --> C
     B3 --> C
     B4 --> C
     B5 --> C
-    B6 --> C
 
     C --> D1[Value Sleeve PM]
     C --> D2[Growth Sleeve PM]
