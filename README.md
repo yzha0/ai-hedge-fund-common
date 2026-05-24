@@ -49,9 +49,9 @@ Style Sleeve PMs
         ↓
 Sleeve-level Risk
         ↓
-Capital Allocator
-        ↓
 Firm-level Risk Committee
+        ↓
+Capital Allocator
         ↓
 Execution Simulator
         ↓
@@ -96,13 +96,13 @@ flowchart TD
     D3 --> E3[Sleeve-level Risk]
     D4 --> E4[Sleeve-level Risk]
 
-    E1 --> F[Capital Allocator]
+    E1 --> F[Firm-level Risk Committee]
     E2 --> F
     E3 --> F
     E4 --> F
 
-    F --> G[Firm-level Risk Committee]
-    G --> H[Execution Simulator]
+    F --> G[Capital Allocator]
+    G --> H[Execution]
     H --> I[Post-trade Attribution]
     I --> J[Analyst Reliability + Sleeve Budget Update]
     J --> C
