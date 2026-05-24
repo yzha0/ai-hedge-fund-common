@@ -149,7 +149,7 @@ Each sleeve reviews the same evidence pool and produces its own proposal. This l
 Risk review is split into two levels:
 
 ```text
-Sleeve-level Risk:
+Sleeve-level Risk(pending):
 Checks whether a proposal is appropriate inside a specific style sleeve.
 
 Firm-level Risk:
@@ -158,7 +158,7 @@ Checks whether the combined proposals fit the overall simulated portfolio risk e
 
 This makes risk management more visible, explainable, and auditable.
 
-### 4. Attribution Native ()
+### 4. Attribution Native (Later construction)
 
 The system should record what happened after each simulated proposal:
 
@@ -200,7 +200,7 @@ A simulated allocation engine that scores sleeve proposals based on expected edg
 
 A paper execution layer that converts approved proposals into simulated orders and updates a paper portfolio state. No real brokerage connection is planned for the MVP.
 
-### Attribution Dashboard
+### Attribution Dashboard(Save for later work)
 
 A post-simulation review dashboard for analyst reliability, sleeve scorecards, proposal outcomes, risk flag outcomes, and allocation review.
 
