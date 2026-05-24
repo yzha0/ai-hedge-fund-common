@@ -875,6 +875,14 @@ raw_budget = softmax(sleeve_score / temperature) * total_risk_budget
 final_budget = apply_firm_caps(raw_budget)
 ```
 
+这样做的好处：
+
+- 可解释；
+- 好 demo；
+- 易写验收标准；
+- 能和 attribution loop 连接；
+- 适合作为 第一版。
+
 ---
 
 ## 08. MVP 功能需求
@@ -1138,4 +1146,3 @@ LLM Research Layer + Quant Validation Layer + Portfolio Governance Layer
 ```
 
 但这属于下一阶段，不作为本 v1 Case Study 的核心交付。
-

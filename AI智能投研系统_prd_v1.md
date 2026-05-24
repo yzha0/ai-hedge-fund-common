@@ -1,4 +1,4 @@
-# AI 智能投研系统模拟工作台 PRD / 产品设计文档 v1
+
 
 **产品名称**：AI 智能投研系统模拟工作台  
 **英文名**：AI Investment Research Simulation Workspace  

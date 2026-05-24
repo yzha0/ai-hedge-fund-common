@@ -8,49 +8,35 @@
         "type": "tabs",
         "children": [
           {
-            "id": "b0b9b154aa652261",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "redesign case suggestions.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "redesign case suggestions"
-            }
-          },
-          {
             "id": "e694b59267ae692a",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
-                "mode": "source",
+                "file": "AI智能投研系统_prd_v1.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "AI智能投研系统_PRD_产品设计文档_v1"
+              "title": "AI智能投研系统_prd_v1"
             }
           },
           {
-            "id": "c6acb0a9ffecf2b7",
+            "id": "aad59ecebe93ae2d",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
+                "file": "AI智能投研系统模拟工作台_Case_Study.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "AI智能投研系统_PRD_产品设计文档_v1"
+              "title": "AI智能投研系统模拟工作台_Case_Study"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -107,8 +93,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "230065a81b0b9fcd",
@@ -124,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
+                "file": "AI智能投研系统模拟工作台_Case_Study.md",
                 "collapseAll": true,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -134,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for AI智能投研系统_PRD_产品设计文档_v1"
+              "title": "Backlinks for AI智能投研系统模拟工作台_Case_Study"
             }
           },
           {
@@ -143,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
+                "file": "AI智能投研系统模拟工作台_Case_Study.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from AI智能投研系统_PRD_产品设计文档_v1"
+              "title": "Outgoing links from AI智能投研系统模拟工作台_Case_Study"
             }
           },
           {
@@ -186,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "AI智能投研系统_PRD_产品设计文档_v1.md",
+                "file": "AI智能投研系统模拟工作台_Case_Study.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of AI智能投研系统_PRD_产品设计文档_v1"
+              "title": "Outline of AI智能投研系统模拟工作台_Case_Study"
             }
           }
         ],
@@ -213,12 +198,16 @@
       "bases:Create new base": false
     }
   },
-  "active": "c6acb0a9ffecf2b7",
+  "active": "aad59ecebe93ae2d",
   "lastOpenFiles": [
+    "Untitled.md",
+    "README.md",
+    "AI智能投研系统_prd_v1.md",
+    "AI智能投研系统模拟工作台_Case_Study.md",
+    "redesign case suggestions.md",
     "tests/backtesting/__pycache__/conftest.cpython-311-pytest-7.4.0.pyc",
     "tests/__pycache__/test_stanley_evidence_routing.cpython-311-pytest-7.4.0.pyc",
     "tests/test_stanley_evidence_routing.py",
-    "AI智能投研系统模拟工作台_Case_Study.md",
     "tests/__pycache__/test_research_synthesizer.cpython-311-pytest-7.4.0.pyc",
     "tests/__pycache__/test_research_synthesizer.cpython-311.pyc",
     "tests/test_research_synthesizer.py",
@@ -226,11 +215,8 @@
     "src/agents/researchers/__pycache__/evidence.cpython-311.pyc",
     "src/utils/__pycache__/investor_policies.cpython-311.pyc",
     "src/utils/investor_policies.py",
-    "src/agents/researchers/evidence.py",
     "README_1.md",
     "AI智能投研系统模拟工作台_Case_Study_v1.md",
-    "AI智能投研系统_PRD_产品设计文档_v1.md",
-    "redesign case suggestions.md",
     "建议2.md",
     "Pasted image 20260518163044.png",
     "agent_graph.png"
